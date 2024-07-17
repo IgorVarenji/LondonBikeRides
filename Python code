@@ -1,0 +1,77 @@
+# Install required libraries
+!pip install pandas
+!pip install zipfile
+!pip install kaggle
+!pip install openpyxl
+
+# Import necessary libraries
+import pandas as pd
+import zipfile
+import kaggle
+
+# Download dataset from Kaggle using the Kaggle API
+!kaggle datasets download -d hmavrodiev/london-bike-sharing-dataset
+
+# Extract the file from the downloaded zip file
+zipfile_name = 'london-bike-sharing-dataset.zip'
+with zipfile.ZipFile(zipfile_name, 'r') as file:
+    file.extractall()
+
+# Load the CSV file into a pandas DataFrame
+bikes = pd.read_csv("london_merged.csv")
+
+# Explore the data
+bikes.info()
+bikes.shape
+bikes.head()
+
+# Count the unique values in the weather_code and season columns
+bikes.weather_code.value_counts()
+bikes.season.value_counts()
+
+# Rename columns
+new_columns_dict = {
+    'timestamp':'time',
+    'cnt':'count',
+    't1':'Temp_real_C',
+    't2':'Temp_feels_like_C',
+    'hum':'humidity_percent',
+    'wind_speed':'wind_speed_kmh',
+    'weather_code':'weather',
+    'is_holiday':'is_holiday',
+    'is_weekend':'is_weekend',
+    'season':'season'
+}
+bikes.rename(new_columns_dict, axis=1, inplace=True)
+
+# Transform humidity values to percentage
+bikes.humidity_percent = bikes.humidity_percent / 100
+
+# Create dictionaries for mapping numerical codes to descriptive names
+season_dict = {
+    '0.0':'Spring',
+    '1.0':'Summer',
+    '2.0':'Autumn',
+    '3.0':'Winter'
+}
+weather_dict = {
+    '1.0':'Clear',
+    '2.0':'Scattered Clouds',
+    '3.0':'Broken Clouds',
+    '4.0':'Cloudy',
+    '7.0':'Rain',
+    '10.0':'Rain with Thunderstorm',
+    '26.0':'Snowfall'
+}
+
+# Map the values in the season and weather columns
+bikes.season = bikes.season.astype('str')
+bikes.season = bikes.season.map(season_dict)
+bikes.weather = bikes.weather.astype('str')
+bikes.weather = bikes.weather.map(weather_dict)
+
+# Verify the mappings
+bikes.head()
+
+# Save the final DataFrame to an Excel file
+bikes.to_excel('london_bikes_final.xlsx', sheet_name='Data')
